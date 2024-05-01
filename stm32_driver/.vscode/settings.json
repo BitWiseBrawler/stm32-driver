@@ -1,8 +1,0 @@
-{
-    "files.associations": {
-        "stm32l475xx.h": "c",
-        "core_cm4.h": "c",
-        "system_stm32l4xx.h": "c",
-        "rcc.h": "c"
-    }
-}
