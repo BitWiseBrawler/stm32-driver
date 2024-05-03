@@ -12,16 +12,11 @@
 
 typedef void* ptr_t;
 
-enum {
-    STM32L475VGT6,
-};
-
 #define USED_MCU  STM32L475VGT6
-
-
 
 #if (USED_MCU == STM32L475VGT6) 
 #define USART_FIFO_SUPPORTED        0
+
 #else
 
 #endif

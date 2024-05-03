@@ -3,6 +3,7 @@
 
 #include "main.h"
 #include "port.h"
+#include "dma.h"
 
 typedef struct usart_info usart_info_t;
 
@@ -99,7 +100,9 @@ typedef struct {
     void (*tx_callback)(usart_info_t*);
 
     uint16_t rx_interrupt_priority;
-    //void (*rx_irq)(usart_info_t*);
+    void (*rx_callback)(usart_info_t*);
+
+    uint8_t dma_used;
 
     port_config_t tx_pin;
     port_config_t rx_pin;
@@ -114,4 +117,8 @@ uint8_t usart_stop(usart_info_t* info);
 uint8_t usart_data_transmit(usart_info_t* info);
 usart_info_t* usart_init(usart_config_t* config);
 void USART_SendString(const char *str);
+
+void usart_send_string_dma(usart_info_t* usart, uint8_t* str, uint16_t length, uint32_t timeout);
+
+
 #endif

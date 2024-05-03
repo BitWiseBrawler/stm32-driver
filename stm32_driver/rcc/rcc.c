@@ -1,6 +1,5 @@
 #include "main.h"
-#include "stm32l475xx.h"
-#include "common_define.h"
+
 #include "rcc.h"
 #include "port.h"
 #include "pwr.h"

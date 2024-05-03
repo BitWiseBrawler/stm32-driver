@@ -5,6 +5,8 @@
 #include "port.h"
 #include "gpio.h"
 #include "memory_management.h"
+#include "dma.h"
+
 
 typedef struct {
     uint16_t count;
@@ -27,6 +29,8 @@ struct usart_info  {
 
     usart_tx_t tx_info;
     usart_rx_t rx_info;
+
+    dma_info_t* tx_dma;
 };
 
 static struct usart_info* u_ptr[USART_NUM_MAX];
@@ -168,23 +172,36 @@ static uint8_t usart_parity_set(usart_config_t* config, USART_TypeDef* usart)
     return 1;
 }
 
-static uint8_t usart_rx_operate_mode_set(usart_config_t* config, USART_TypeDef* usart)
-{
-
-}
-
+/**
+ * @brief usart 초기화 함수 
+ * 
+ * @param config 사용자가 설정한 설정값을 가리키는 포인터
+ * @return usart_info_t* 초기화 완료된 usart에 할당된 메모리 영역을 가리키는 포인터
+ * @details **Details**\n
+ * @details - 
+ * 
+ * @see usart_config_t
+ * @see usart_info_t 
+ */
 usart_info_t* usart_init(usart_config_t* config)
 {
 #if (USED_MCU == STM32L475VGT6)
     USART_TypeDef* bases[USART_NUM_MAX] =  {USART1, USART2, USART3, UART4, UART5, LPUART1};
-#endif
+    USART_TypeDef* base;
+#else 
 
-    usart_info_t* info = (usart_info_t*)alloc_memory(sizeof(usart_info_t*));
+#endif
+    usart_info_t* info = (usart_info_t*)alloc_memory(sizeof(usart_info_t));
 
     if(!usart_clock_enable(config->usart_num, USART_CLOCK_SOURCE_PCLK)) return 0;
+    
+    memset(&info->tx_info, 0, sizeof(usart_tx_t));
+    memset(&info->rx_info, 0, sizeof(usart_rx_t));
+    memset(&info->tx_dma, 0, sizeof(dma_info_t*));
 
     info->usart_num = config->usart_num;
     info->base = bases[config->usart_num];
+    base = bases[config->usart_num];
 
     gpio_speed_set(GPIO_SPEED_VERY_HIGH, config->tx_pin.name, config->tx_pin.pin);
     gpio_speed_set(GPIO_SPEED_VERY_HIGH, config->rx_pin.name, config->rx_pin.pin);
@@ -194,25 +211,52 @@ usart_info_t* usart_init(usart_config_t* config)
 
     usart_clock_enable(config->usart_num, config->clock_source);
 
-    // mode set 
-
     usart_baudrate_set(config, info->base);
     usart_data_bit_set(config, info->base);
     usart_stop_bit_set(config, info->base);
     usart_over_sampling_mode_set(config, info->base);
     usart_parity_set(config, info->base);
-    
-    memset(&info->tx_info, 0, sizeof(usart_tx_t));
-    memset(&info->rx_info, 0, sizeof(usart_rx_t));
-    //memset(usart_tx_info[config->usart_num]->buffer, 0, sizeof(uint8_t) * USART_TX_BUFFER_SIZE);
-
+        
     info->tx_info.callback = config->tx_callback;
+    info->rx_info.callback = config->rx_callback;
+
+    if(config->dma_used)    {
+        dma_config_t tx_dma_config = {
+            .dma_num = DMA_1,
+            .ch = DMA_CHANNEL_4,
+
+            .mode = PERI_TO_MEM,
+            .priority = DMA_PRIORITY_LEVEL_VERY_HIGH,
+            .msize = MSIZE_8_BIT,
+            .psize = PSIZE_8_BIT,
+            .circular = CIRCULAR_MODE_OFF,
+            .dir = DMA_DIR_READ_FROM_MEMORY,
+            .half_interrupt = DMA_HALF_INTERRUPT_DISABLE,
+
+            .request_peripheral = DMA1_CH4__USART1_TX,
+
+            .peripheral_address = (uint32_t*)&base->TDR,
+            .memory_address = (uint32_t*)&info->tx_info.buffer,
+        };
+
+        base->CR3 |= USART_CR3_DMAT;
+
+        info->tx_dma = dma_init(&tx_dma_config);
+    }
 
     u_ptr[info->usart_num] = info;
 
     return info;
 }
 
+/**
+ * @brief 
+ * 
+ * @param info 
+ * @return uint8_t 
+ * @details **Details**\n
+ * @details - 
+ */
 uint8_t usart_stop(usart_info_t* info)
 {
     USART_TypeDef* usart = info->base;
@@ -251,7 +295,6 @@ void usart_send_string_polling(usart_info_t* usart, uint8_t* str, uint16_t lengt
 void usart_send_string_interrupt(usart_info_t* usart, uint8_t* str, uint16_t length, uint32_t timeout)
 {
     USART_TypeDef* base = usart->base;
-    uint16_t usart_num = (uint16_t)usart->usart_num;
     usart_tx_t* ptr = &usart->tx_info;
 
     if(!(base->CR1 & USART_CR1_TXEIE))   {
@@ -264,9 +307,19 @@ void usart_send_string_interrupt(usart_info_t* usart, uint8_t* str, uint16_t len
     }
 }
 
-void usart_received_data_get(usart_info_t* usart, uint8_t* buffer)
+void usart_send_string_dma(usart_info_t* usart, uint8_t* str, uint16_t length, uint32_t timeout)
 {
     USART_TypeDef* base = usart->base;
+    usart_tx_t* ptr = &usart->tx_info;
+
+    memcpy(ptr->buffer, str, length);
+    
+    base->CR1 |= USART_CR1_TE;
+    dma_data_transfer(usart->tx_dma, length);
+}
+
+void usart_received_data_get(usart_info_t* usart, uint8_t* buffer)
+{
     usart_rx_t* ptr = &usart->rx_info;
 
     memcpy(buffer, ptr->buffer, ptr->count);
