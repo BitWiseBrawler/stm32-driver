@@ -31,6 +31,7 @@ struct usart_info  {
     usart_rx_t rx_info;
 
     dma_info_t* tx_dma;
+    dma_info_t* rx_dma;
 };
 
 static struct usart_info* u_ptr[USART_NUM_MAX];
@@ -225,7 +226,7 @@ usart_info_t* usart_init(usart_config_t* config)
             .dma_num = DMA_1,
             .ch = DMA_CHANNEL_4,
 
-            .mode = PERI_TO_MEM,
+            .mode = MEM2MEM_DISABLE,
             .priority = DMA_PRIORITY_LEVEL_VERY_HIGH,
             .msize = MSIZE_8_BIT,
             .psize = PSIZE_8_BIT,
@@ -238,13 +239,38 @@ usart_info_t* usart_init(usart_config_t* config)
 
             .request_peripheral = DMA1_CH4__USART1_TX,
 
-            .peripheral_address = (uint32_t*)&base->TDR,
-            .memory_address = (uint32_t*)&info->tx_info.buffer,
+            .peripheral_address = (uint32_t)&base->TDR,
+            .memory_address = (uint32_t)&info->tx_info.buffer,
         };
 
         base->CR3 |= USART_CR3_DMAT;
 
         info->tx_dma = dma_init(&tx_dma_config);
+
+        dma_config_t rx_dma_config = {
+            .dma_num = DMA_1,
+            .ch = DMA_CHANNEL_5,
+
+            .mode = MEM2MEM_DISABLE,
+            .priority = DMA_PRIORITY_LEVEL_VERY_HIGH,
+            .msize = MSIZE_8_BIT,
+            .psize = PSIZE_8_BIT,
+            .circular = CIRCULAR_MODE_OFF,
+            .dir = DMA_DIR_READ_FROM_PERIPHERAL,
+
+            .error_interrupt = DMA_ERROR_INTERRUPT_DISABLE,
+            .half_interrupt = DMA_HALF_INTERRUPT_DISABLE,
+            .tc_interrupt = DMA_TRANSFER_COMPLETE_INTERRUPT_ENABLE,
+
+            .request_peripheral = DMA1_CH5__USART1_RX,
+
+            .peripheral_address = (uint32_t)&base->RDR,
+            .memory_address = (uint32_t)&info->rx_info.buffer,
+        };
+
+        base->CR3 |= USART_CR3_DMAR;
+
+        info->rx_dma = dma_init(&rx_dma_config);
     }
 
     u_ptr[info->usart_num] = info;
@@ -345,6 +371,13 @@ void usart_received_interrupt(usart_info_t* usart, uint16_t length, uint32_t tim
         base->CR1 |= USART_CR1_RE;
         base->CR1 |= USART_CR1_RXNEIE;
     }
+}
+
+void usart_received_dma(usart_info_t* usart, uint16_t length, uint32_t timeout)
+{
+    USART_TypeDef* base = usart->base;
+    base->CR1 |= USART_CR1_RE;
+    dma_data_transfer(usart->rx_dma, length);
 }
 
 static void usart_rx_interrupt_handler(USART_TypeDef* handler, usart_num_t num)

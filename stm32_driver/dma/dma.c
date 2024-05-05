@@ -111,8 +111,8 @@ dma_info_t* dma_init(dma_config_t* config)
 
     dma_usart_configration(config, info->ch_base);
 
-    ch_base->CPAR = (uint32_t)config->peripheral_address;
-    ch_base->CMAR = (uint32_t)config->memory_address;
+    ch_base->CPAR = config->peripheral_address;
+    ch_base->CMAR = config->memory_address;
 
     return info;
 }
@@ -163,7 +163,17 @@ void DMA1_Channel4_IRQHandler(void)
 }
 void DMA1_Channel5_IRQHandler(void)
 {
-    
+    if(DMA1_TCIF_INTERRUPT_FLAG_GET(5)) {
+        DMA1_TCIF_INTERRUPT_FLAG_CLEAR(5);
+    }
+
+    if(DMA1_HTIF_INTERRUPT_FLAG_GET(5)) {
+        DMA1_HTIF_INTERRUPT_FLAG_CLEAR(4);
+    }
+
+    if(DMA1_TEIF_INTERRUPT_FLAG_GET(5)) {
+        DMA1_TEIF_INTERRUPT_FLAG_CLEAR(5);
+    }
 }
 void DMA1_Channel6_IRQHandler(void)
 {

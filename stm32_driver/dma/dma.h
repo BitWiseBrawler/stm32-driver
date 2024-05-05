@@ -261,12 +261,16 @@ typedef enum    {
 } dma_num_t;
 
 typedef enum    {
+    MEM2MEM_DISABLE,
+    MEM2MEM_ENABLE,
+#if 0
     PERI_TO_MEM,
     MEM_TO_PERI,
     MEM_TO_MEM,
     PERI_TO_PERI,
     DMA_DATA_TRANSFER_MODE_MAX,
-}   dma_data_transfer_mode_t;
+#endif
+}   dma_data_transfer_mem2mem_mode_t;
 
 typedef enum    {
     DMA_PRIORITY_LEVEL_LOW,
@@ -317,7 +321,7 @@ typedef struct {
     dma_num_t dma_num;
     dma_channel_t ch;
 
-    dma_data_transfer_mode_t mode;
+    dma_data_transfer_mem2mem_mode_t mode;
     dma_priority_level_t priority;
     dma_memory_size_t msize;
     dma_peripheral_size_t psize;
@@ -330,8 +334,8 @@ typedef struct {
     
     uint8_t request_peripheral; /* Refer to the DMA1 and DMA2 Channel map.*/
 
-    uint32_t* peripheral_address;
-    uint32_t* memory_address;
+    uint32_t peripheral_address;
+    uint32_t memory_address;
 
 }   dma_config_t;
 

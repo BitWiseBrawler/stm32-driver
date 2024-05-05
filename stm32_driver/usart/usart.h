@@ -119,6 +119,6 @@ usart_info_t* usart_init(usart_config_t* config);
 void USART_SendString(const char *str);
 
 void usart_send_string_dma(usart_info_t* usart, uint8_t* str, uint16_t length, uint32_t timeout);
-
+void usart_received_dma(usart_info_t* usart, uint16_t length, uint32_t timeout);
 
 #endif
