@@ -231,7 +231,10 @@ usart_info_t* usart_init(usart_config_t* config)
             .psize = PSIZE_8_BIT,
             .circular = CIRCULAR_MODE_OFF,
             .dir = DMA_DIR_READ_FROM_MEMORY,
+
+            .error_interrupt = DMA_ERROR_INTERRUPT_DISABLE,
             .half_interrupt = DMA_HALF_INTERRUPT_DISABLE,
+            .tc_interrupt = DMA_TRANSFER_COMPLETE_INTERRUPT_ENABLE,
 
             .request_peripheral = DMA1_CH4__USART1_TX,
 

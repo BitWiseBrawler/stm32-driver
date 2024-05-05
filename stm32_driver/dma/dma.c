@@ -7,6 +7,9 @@ struct dma_info  {
     DMA_TypeDef* base;
     DMA_Channel_TypeDef* ch_base;
     DMA_Request_TypeDef* req_base;
+
+    void (*transfer_complete_callback)(dma_info_t*);
+    void (*half_transfer_complete_callback)(dma_info_t*);
 };
 
 static uint8_t dma_clock_enable(dma_num_t num)
@@ -63,9 +66,9 @@ static uint8_t dma_usart_configration(dma_config_t* config, DMA_Channel_TypeDef*
                     | DMA_CCR_MINC
                     | config->circular << DMA_CCR_CIRC_Pos
                     | config->dir << DMA_CCR_DIR_Pos
-                    | DMA_CCR_TEIE
+                    | config->error_interrupt << DMA_CCR_TEIE_Pos
                     | config->half_interrupt << DMA_CCR_HTIE_Pos
-                    | DMA_CCR_TCIE
+                    | config->tc_interrupt << DMA_CCR_TCIE_Pos
     );
 
     NVIC_EnableIRQ(irq_num[config->dma_num][config->ch]);

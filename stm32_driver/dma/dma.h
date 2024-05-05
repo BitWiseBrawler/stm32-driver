@@ -252,7 +252,7 @@ typedef enum {
 
 #define DMA1_TEIF_INTERRUPT_FLAG_GET(DMA_CHANNEL) \
     (DMA1->ISR & (DMA_ISR_TEIF1 << ((DMA_CHANNEL - 1) * 4)) ? 1 : 0)
-    
+
 /************************************************************************************/
 typedef enum    {
     DMA_1,
@@ -297,11 +297,20 @@ typedef enum    {
     DMA_DIR_READ_FROM_MEMORY,
 }   dma_data_transfer_direction_t;
 
+typedef enum {
+    DMA_ERROR_INTERRUPT_DISABLE,
+    DMA_ERROR_INTERRUPT_ENABLE,
+}   dma_error_interrupt_t;
 
 typedef enum {
-    DMA_HALF_INTERRUPT_ENABLE,
     DMA_HALF_INTERRUPT_DISABLE,
+    DMA_HALF_INTERRUPT_ENABLE,
 }   dma_half_interrupt_t;
+
+typedef enum {
+    DMA_TRANSFER_COMPLETE_INTERRUPT_DISABLE,
+    DMA_TRANSFER_COMPLETE_INTERRUPT_ENABLE,
+}   dma_transfer_complete_interrupt_t;
 
 typedef struct {
 
@@ -314,7 +323,10 @@ typedef struct {
     dma_peripheral_size_t psize;
     dma_circular_mode_t circular;
     dma_data_transfer_direction_t dir;
+
+    dma_error_interrupt_t error_interrupt;
     dma_half_interrupt_t half_interrupt;
+    dma_transfer_complete_interrupt_t tc_interrupt;
     
     uint8_t request_peripheral; /* Refer to the DMA1 and DMA2 Channel map.*/
 
