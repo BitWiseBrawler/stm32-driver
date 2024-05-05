@@ -230,6 +230,30 @@ typedef enum {
 }   dma2_channel7_map_t;
 /************************************************************************************/
 
+/************************************************************************************/
+/*              Define a DMA interrupt flag get and clear macro.                    */
+#define DMA1_TCIF_INTERRUPT_FLAG_CLEAR(DMA_CHANNEL) \
+    DMA1->IFCR = (DMA_IFCR_CTCIF1 << ((DMA_CHANNEL - 1) * 4));
+
+#define DMA1_HTIF_INTERRUPT_FLAG_CLEAR(DMA_CHANNEL) \
+    DMA1->IFCR = (DMA_IFCR_CHTIF1 << ((DMA_CHANNEL - 1) * 4));
+
+#define DMA1_TEIF_INTERRUPT_FLAG_CLEAR(DMA_CHANNEL) \
+    DMA1->IFCR = (DMA_IFCR_CTEIF1 << ((DMA_CHANNEL - 1) * 4));
+
+#define DMA1_GIF_INTERRUPT_FLAG_CLEAR(CMA_CHANNEL) \
+    DMA1->IFCR = (DMA_IFCR_CGIF1 << ((DMA_CHANNEL - 1) * 4));
+
+#define DMA1_TCIF_INTERRUPT_FLAG_GET(DMA_CHANNEL) \
+    ((DMA1->ISR & (DMA_ISR_TCIF1 << ((DMA_CHANNEL - 1) * 4))) ? 1 : 0)
+        
+#define DMA1_HTIF_INTERRUPT_FLAG_GET(DMA_CHANNEL) \
+    (DMA1->ISR & (DMA_ISR_HTIF1 << ((DMA_CHANNEL - 1) * 4)) ? 1 : 0)
+
+#define DMA1_TEIF_INTERRUPT_FLAG_GET(DMA_CHANNEL) \
+    (DMA1->ISR & (DMA_ISR_TEIF1 << ((DMA_CHANNEL - 1) * 4)) ? 1 : 0)
+    
+/************************************************************************************/
 typedef enum    {
     DMA_1,
     DMA_2,
@@ -264,8 +288,8 @@ typedef enum {
 }   dma_peripheral_size_t;
 
 typedef enum {
-    CIRCULAR_MODE_ON,
     CIRCULAR_MODE_OFF,
+    CIRCULAR_MODE_ON,
 }   dma_circular_mode_t;
 
 typedef enum    {

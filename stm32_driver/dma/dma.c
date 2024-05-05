@@ -51,6 +51,11 @@ static uint8_t dma_channel_select(DMA_Request_TypeDef* dma_csel, uint8_t ch, uin
 
 static uint8_t dma_usart_configration(dma_config_t* config, DMA_Channel_TypeDef* dma_ch)
 {
+    uint16_t irq_num[DMA_MAX][DMA_CHANNEL_MAX] = {
+        {DMA1_Channel1_IRQn, DMA1_Channel2_IRQn, DMA1_Channel3_IRQn, DMA1_Channel4_IRQn, DMA1_Channel5_IRQn, DMA1_Channel6_IRQn, DMA1_Channel7_IRQn},
+        {DMA2_Channel1_IRQn, DMA2_Channel2_IRQn, DMA2_Channel3_IRQn, DMA2_Channel4_IRQn, DMA2_Channel5_IRQn, DMA2_Channel6_IRQn, DMA2_Channel7_IRQn}
+    };
+
     dma_ch->CCR = ( config->mode << DMA_CCR_MEM2MEM_Pos
                     | config->priority << DMA_CCR_PL_Pos
                     | config->msize << DMA_CCR_MSIZE_Pos
@@ -58,10 +63,12 @@ static uint8_t dma_usart_configration(dma_config_t* config, DMA_Channel_TypeDef*
                     | DMA_CCR_MINC
                     | config->circular << DMA_CCR_CIRC_Pos
                     | config->dir << DMA_CCR_DIR_Pos
-                    /*| DMA_CCR_TEIE*/
+                    | DMA_CCR_TEIE
                     | config->half_interrupt << DMA_CCR_HTIE_Pos
                     | DMA_CCR_TCIE
     );
+
+    NVIC_EnableIRQ(irq_num[config->dma_num][config->ch]);
 
     return 1;
 }
@@ -104,8 +111,6 @@ dma_info_t* dma_init(dma_config_t* config)
     ch_base->CPAR = (uint32_t)config->peripheral_address;
     ch_base->CMAR = (uint32_t)config->memory_address;
 
-    //if(!dma_ch_enable(info->ch_base))   return 0;
-
     return info;
 }
 
@@ -137,13 +142,20 @@ void DMA1_Channel3_IRQHandler(void)
 {
     
 }
-uint16_t int_flag = 0;
+
+
 void DMA1_Channel4_IRQHandler(void)
 {
-    int_flag = 1;
-    if (DMA1->ISR & DMA_ISR_TCIF4) { // 전송 완료 인터럽트 확인
-        DMA1->IFCR |= DMA_IFCR_CTCIF4; // 인터럽트 플래그 클리어
-        DMA1_Channel4->CCR &= ~DMA_CCR_EN; // DMA 채널 비활성화
+    if(DMA1_TCIF_INTERRUPT_FLAG_GET(4)) {
+        DMA1_TCIF_INTERRUPT_FLAG_CLEAR(4);
+    }
+
+    if(DMA1_HTIF_INTERRUPT_FLAG_GET(4)) {
+        DMA1_HTIF_INTERRUPT_FLAG_CLEAR(4);
+    }
+
+    if(DMA1_TEIF_INTERRUPT_FLAG_GET(4)) {
+        DMA1_TEIF_INTERRUPT_FLAG_CLEAR(4);
     }
 }
 void DMA1_Channel5_IRQHandler(void)
