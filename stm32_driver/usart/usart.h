@@ -3,10 +3,11 @@
 
 #include "main.h"
 #include "port.h"
-#include "dma.h"
 
 typedef struct usart_info usart_info_t;
 
+/************************************************************************************/
+/*              configuration parameters                                            */
 #define USART_TX_BUFFER_SIZE  1024
 
 typedef enum {
@@ -77,7 +78,9 @@ typedef enum {
     USART_CLOCK_SOURCE_HSI16,
     USART_CLOCK_SOURCE_LSE,
 }   usart_clock_source_t;
-
+/************************************************************************************/
+/************************************************************************************/
+/*              configuration                                                       */
 typedef struct {
     usart_data_bit_t data_bit;
     usart_parity_t parity;
@@ -110,7 +113,7 @@ typedef struct {
     usart_serial_mode_t serial_mode;
 
 }   usart_config_t;
-
+/************************************************************************************/
 uint8_t usart_tx_enable(usart_info_t* info);
 uint8_t usart_start(usart_info_t* info);
 uint8_t usart_stop(usart_info_t* info);

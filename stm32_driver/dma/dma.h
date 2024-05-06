@@ -8,17 +8,6 @@ typedef struct dma_info dma_info_t;
 #define ONLY_AVAILABLE_RANGE_1 ((USED_MCU >= STM32L496AEI6) && (USED_MCU <= STM32L4A6ZGT6P))
 #define ONLY_AVAILABLE_RANGE_2 ((USED_MCU >= STM32L486JGY6TR) && (USED_MCU <= STM32L4A6ZGT6P))
 
-typedef enum {
-    DMA_CHANNEL_1,
-    DMA_CHANNEL_2,
-    DMA_CHANNEL_3,
-    DMA_CHANNEL_4,
-    DMA_CHANNEL_5,
-    DMA_CHANNEL_6,
-    DMA_CHANNEL_7,
-    DMA_CHANNEL_MAX,
-} dma_channel_t;
-
 /************************************************************************************/
 /*              DMA 1 channel map                                                   */
 typedef enum {
@@ -105,7 +94,6 @@ typedef enum {
     DMA1_CH7__MAX,
 }   dma1_channel7_map_t;
 /************************************************************************************/
-
 /************************************************************************************/
 /*              DMA 2 channel map                                                   */
 typedef enum {
@@ -254,6 +242,19 @@ typedef enum {
     (DMA1->ISR & (DMA_ISR_TEIF1 << ((DMA_CHANNEL - 1) * 4)) ? 1 : 0)
 
 /************************************************************************************/
+/************************************************************************************/
+/*              configuration parameters                                            */
+typedef enum {
+    DMA_CHANNEL_1,
+    DMA_CHANNEL_2,
+    DMA_CHANNEL_3,
+    DMA_CHANNEL_4,
+    DMA_CHANNEL_5,
+    DMA_CHANNEL_6,
+    DMA_CHANNEL_7,
+    DMA_CHANNEL_MAX,
+} dma_channel_t;
+
 typedef enum    {
     DMA_1,
     DMA_2,
@@ -315,7 +316,9 @@ typedef enum {
     DMA_TRANSFER_COMPLETE_INTERRUPT_DISABLE,
     DMA_TRANSFER_COMPLETE_INTERRUPT_ENABLE,
 }   dma_transfer_complete_interrupt_t;
-
+/************************************************************************************/
+/************************************************************************************/
+/*              configuration                                                       */
 typedef struct {
 
     dma_num_t dma_num;
@@ -338,6 +341,7 @@ typedef struct {
     uint32_t memory_address;
 
 }   dma_config_t;
+/************************************************************************************/
 
 dma_info_t* dma_init(dma_config_t* config);
 void dma_data_transfer(dma_info_t* dma, uint16_t length);
