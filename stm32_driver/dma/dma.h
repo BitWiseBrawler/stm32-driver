@@ -320,7 +320,6 @@ typedef enum {
 /************************************************************************************/
 /*              configuration                                                       */
 typedef struct {
-
     dma_num_t dma_num;
     dma_channel_t ch;
 

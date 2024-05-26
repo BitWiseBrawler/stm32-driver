@@ -8,7 +8,8 @@
 #include "memory_management.h"
 #include "usart.h"
 
-static gpio_info_t* gpio_led;
+static gpio_info_t* led2;
+static gpio_info_t* led3;
 static usart_info_t* uart_stlink;
 
 static void init_clock(void)
@@ -24,8 +25,15 @@ static void init_clock(void)
 
 void usart_tx_callback(usart_info_t* usart)
 {
+#if 0
     char* str = "Hello world\r\n";
-    //usart_send_string_interrupt(uart_stlink, (uint8_t*)str, strlen(str), 1000);
+    usart_send_string_interrupt(uart_stlink, (uint8_t*)str, strlen(str), 1000);
+#endif
+}
+
+void usart_rx_callback(usart_info_t* usart)
+{
+
 }
 
 static void init_peripheral(void)
@@ -34,7 +42,7 @@ static void init_peripheral(void)
 
     systick_init(rcc_system_clock_get());
 
-    gpio_config_t gpio_config = {
+    gpio_config_t led2_config = {
         .port_config = {
             .name = PORT_NAME_B,
             .pin = PIN_14,
@@ -47,8 +55,24 @@ static void init_peripheral(void)
         .init_value = GPIO_LOW_SET,
     };
     
-    gpio_led = gpio_init(&gpio_config);
-    gpio_output_set(gpio_led, GPIO_HIGH_SET); 
+    led2 = gpio_init(&led2_config);
+    gpio_output_set(led2, GPIO_HIGH_SET); 
+
+    gpio_config_t led3_config = {
+        .port_config = {
+            .name = PORT_NAME_C,
+            .pin = PIN_9,
+            .mode = GPIO_OUTPUT,
+            .lock = PORT_LOCK,
+        },
+        .output_type = GPIO_OUTPUT_PUSH_FULL,
+        .pupd = GPIO_PULL_UP_DOWN_NO,
+        .speed = GPIO_SPEED_VERY_HIGH,
+        .init_value = GPIO_LOW_SET,
+    };
+    
+    led3 = gpio_init(&led3_config);
+    gpio_output_set(led3, GPIO_HIGH_SET); 
 
     usart_config_t uart_config = {
         .usart_num = USART_NUM_1,
@@ -65,7 +89,13 @@ static void init_peripheral(void)
         .over_sampling = USART_OVER_8,
         .clock_source = USART_CLOCK_SOURCE_SYSCLK,
 
+        .tx_interrupt_priority = 0,
         .tx_callback = usart_tx_callback,
+
+        .rx_interrupt_priority = 0,
+        .rx_callback = usart_rx_callback,
+
+        .dma_used = 1,
 
         .tx_pin = {
             .name = PORT_NAME_B,
@@ -94,7 +124,8 @@ static uint32_t pre_time=0;
 void systick_led(void)
 {
     if(systick_freerun_get() - pre_time >= SYSTICK_1_MSEC)   {
-        gpio_toggle(gpio_led);
+        gpio_toggle(led2);
+        gpio_toggle(led3);
         pre_time = systick_freerun_get();
     }
 }
@@ -109,8 +140,9 @@ int main(void)
     calculate_memory_usage();
 #endif
 
-    usart_send_string_interrupt(uart_stlink, (uint8_t*)"Hello stm32\r\n", 14, 1000);
-    
+    //usart_send_string_interrupt(uart_stlink, (uint8_t*)"Hello stm32\r\n", 14, 1000);
+    usart_send_string_dma(uart_stlink, (uint8_t*)"Hello stm32\r\n", 13, 1000);
+    usart_received_dma(uart_stlink, 1, 1000);
     while(1)    {
         systick_led();
     }
